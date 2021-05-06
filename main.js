@@ -99,6 +99,11 @@ const getFilePath = (key) => {
 };
 
 const addItem = (msg, userId, key, item) => {
+  if (key === 'quippy') {
+    sendTo(msg, userId, 'that keyword is reserved.');
+    return;
+  }
+
   if (!(key in ITEMS)) {
     ITEMS[key] = [item];
     const str = '`' + key + '`';
