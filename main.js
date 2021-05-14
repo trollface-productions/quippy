@@ -9,6 +9,7 @@ const BOT_VERSION = '1.0';
 const ADMIN_KEYWORD = '!quippy';
 const ADMIN_EXPR = new RegExp(`^${ADMIN_KEYWORD} (.+)`);
 const KEYWORD_EXPR = `(^|\\s)!{}($|\\s)`; // NOTE: double escaped
+const MAX_MSG_LENGTH = 2000; // Discord limits
 
 let STATE = {}; // Bot global state; wiped clean if restarted.
 let ITEMS = {}; // Stores the data to serve; sync with file system.
@@ -99,11 +100,6 @@ const getFilePath = (key) => {
 };
 
 const addItem = (msg, userId, key, item) => {
-  if (key === 'quippy') {
-    sendTo(msg, userId, 'that keyword is reserved.');
-    return;
-  }
-
   if (!(key in ITEMS)) {
     ITEMS[key] = [item];
     const str = '`' + key + '`';
@@ -156,7 +152,14 @@ const doList = (msg, userId, key) => {
   const items = ITEMS[key];
   let listMsg = '```';
   for (let i = 0; i < items.length; i++) {
-    listMsg += `[${i}] ${items[i]}\n`;
+    let temp = listMsg + `[${i}] ${items[i]}\n`;
+    if (temp.length > MAX_MSG_LENGTH) {
+      listMsg += '```';
+      send(msg, listMsg);
+      listMsg = '```' + `[${i}] ${items[i]}\n`;
+    } else {
+      listMsg = temp;
+    }
   }
   listMsg += '```';
   sendTo(msg, userId, listMsg);
