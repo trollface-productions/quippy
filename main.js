@@ -10,6 +10,7 @@ const ADMIN_KEYWORD = '!quippy';
 const ADMIN_EXPR = new RegExp(`^${ADMIN_KEYWORD} (.+)`);
 const KEYWORD_EXPR = `(^|\\s)!{}($|\\s)`; // NOTE: double escaped
 const MAX_MSG_LENGTH = 2000; // Discord limits
+const MSG_PADDING = 26; // 18-char ID + additional chars + wiggle room
 
 let STATE = {}; // Bot global state; wiped clean if restarted.
 let ITEMS = {}; // Stores the data to serve; sync with file system.
@@ -153,7 +154,7 @@ const doList = (msg, userId, key) => {
   let listMsg = '```';
   for (let i = 0; i < items.length; i++) {
     let temp = listMsg + `[${i}] ${items[i]}\n`;
-    if (temp.length > MAX_MSG_LENGTH) {
+    if (temp.length + MSG_PADDING >= MAX_MSG_LENGTH) { // NOTE: see definition
       listMsg += '```';
       send(msg, listMsg);
       listMsg = '```' + `[${i}] ${items[i]}\n`;
@@ -168,6 +169,11 @@ const doList = (msg, userId, key) => {
 const doAdd = (msg, userId, key, rest) => {
   if (!key) {
     sendTo(msg, userId, 'please specify a keyword.');
+    return;
+  }
+
+  if (`!${key}` === ADMIN_KEYWORD) {
+    sendTo(msg, userId, 'sorry, the keyword `' + key + '` is reserved!');
     return;
   }
 
